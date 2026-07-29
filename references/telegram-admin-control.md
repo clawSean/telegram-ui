@@ -67,6 +67,52 @@ curl -fsS --get "https://api.telegram.org/bot${TOKEN}/getChat" \
 
 A fresh `photo.small_file_id` / `photo.big_file_id` confirms Telegram accepted the update.
 
+## Change Group Description
+
+Telegram Bot API method: `setChatDescription`.
+
+### Requirements
+
+- The bot must be a group admin.
+- The bot needs `can_change_info: true` for the target group/supergroup.
+- Telegram group descriptions support up to 255 characters.
+
+Use the same permission check shown above before mutating the description.
+
+### Set The Description
+
+```bash
+CHAT='<telegram_chat_id>'
+DESCRIPTION='<new group description>'
+TOKEN=$(jq -r '.channels.telegram.accounts.<account>.botToken' ~/.openclaw/openclaw.json)
+
+curl -fsS -X POST "https://api.telegram.org/bot${TOKEN}/setChatDescription" \
+  --data-urlencode "chat_id=${CHAT}" \
+  --data-urlencode "description=${DESCRIPTION}" \
+  | jq
+```
+
+Expected success:
+
+```json
+{
+  "ok": true,
+  "result": true
+}
+```
+
+Pass an empty `description` value only when the user explicitly asks to clear the existing description.
+
+### Verify
+
+```bash
+curl -fsS --get "https://api.telegram.org/bot${TOKEN}/getChat" \
+  --data-urlencode "chat_id=${CHAT}" \
+  | jq '{ok, title: .result.title, description: .result.description}'
+```
+
+Confirm that `.result.description` exactly matches the requested text.
+
 ## Notes
 
 - Do not print or expose bot tokens.
